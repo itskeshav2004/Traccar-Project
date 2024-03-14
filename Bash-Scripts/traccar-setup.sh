@@ -15,7 +15,10 @@ unzip traccar.zip && chmod +x traccar.run
 
 cp /home/ubuntu/traccar.xml /opt/traccar/conf/traccar.xml
 
+echo "Traccar installation and configuration completed."
+
 sudo mysql -u root -p"$MYSQL_ROOT_PASSWORD" <<MYSQL_SCRIPT
+SET GLOBAL time_zone = '+05:30';
 CREATE DATABASE IF NOT EXISTS $MYSQL_DB_NAME;
 CREATE USER '$MYSQL_USER'@'localhost' IDENTIFIED BY '$MYSQL_PASSWORD';
 GRANT ALL PRIVILEGES ON $MYSQL_DB_NAME.* TO '$MYSQL_USER'@'localhost';
@@ -23,3 +26,5 @@ FLUSH PRIVILEGES;
 MYSQL_SCRIPT
 
 service mysql restart && service traccar restart
+
+echo "MySQL installation, user privilege setup, and timezone configuration completed."

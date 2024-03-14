@@ -49,7 +49,7 @@ resource "aws_vpc_security_group_egress_rule" "allow_all_traffic_ipv4" {
 
 resource "aws_instance" "traccarEC2" {
   ami                    = data.aws_ami.ubuntu.id
-  instance_type          = "t2.micro"
+  instance_type          = "t3a.large"
   key_name               = aws_key_pair.traccarKey.key_name
   subnet_id              = aws_subnet.traccarSubnets[0].id
   vpc_security_group_ids = [aws_security_group.traccarSG.id]
