@@ -1,0 +1,24 @@
+services:
+  traccar:
+    image: traccar/traccar:5.12-ubuntu
+    container_name: traccar
+    hostname: traccar
+    restart: always
+    ports:
+      - "80:8082"
+      - "5000-5150:5000-5150"
+      - "5000-5150:5000-5150/udp"
+    volumes:
+      - /opt/traccar/logs:/opt/traccar/logs:rw
+      - /opt/traccar/traccar.xml:/opt/traccar/conf/traccar.xml:ro
+    depends_on:
+      - db
+
+  db:
+    image: mysql:latest
+    container_name: db
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: "YOUR_ROOT_PASSWORD"
+    volumes:
+    - /var/mysql/db_data:/var/lib/mysql
