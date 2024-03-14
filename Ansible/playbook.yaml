@@ -1,0 +1,75 @@
+---
+- name: Download and Configure Traccar and MySQL Service
+  hosts: traccar
+  vars:
+    pkg: mysql-server
+  tasks:
+    - name: Install pip for Python 3
+      apt:
+        name: python3-pip
+        state: present
+        update_cache: yes
+
+    - name: Install PyMySQL
+      pip:
+        name: pymysql
+        state: present
+
+    - name: Set ansible_python_interpreter
+      set_fact:
+        ansible_python_interpreter: /usr/bin/python3
+
+    - name: Update repositories cache and install "{{pkg}}" package
+      apt:
+        name: "{{pkg}}"
+        state: present
+
+    - name: Check if Traccar is installed
+      stat:
+        path: /opt/traccar
+      register: traccar_installed
+
+    - name: Install Traccar on Server
+      script: traccar.run
+      when: traccar_installed.stat.isdir is not defined or not traccar_installed.stat.exists
+      notify: Copy XML file and take backup
+
+  handlers:
+    - name: Copy XML file and take backup
+      copy:
+        src: traccar.xml
+        dest: /opt/traccar/conf/traccar.xml
+        backup: yes
+
+- name: Conifugre MySQL DB and User
+  hosts: traccar
+  vars:
+    socket: /var/run/mysqld/mysqld.sock
+    service:
+      - mysql
+      - traccar
+  vars_files:
+    - secret.yaml
+  tasks:
+    - name: Create database
+      mysql_db:
+        login_unix_socket: "{{socket}}"
+        name: traccardb
+        state: present
+
+    - name: Create MySQL user
+      mysql_user:
+        login_unix_socket: "{{socket}}"
+        name: "{{user_name}}"
+        password: "{{user_pass}}"
+        priv: 'traccardb.*:ALL'
+        state: present
+      notify: Restart MySQL and Traccar service
+
+  handlers:
+    - name: Restart MySQL and Traccar service
+      service:
+        name: "{{item}}"
+        state: restarted
+        enabled: true
+      loop: "{{service}}"
